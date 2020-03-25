@@ -16,7 +16,7 @@ namespace projekt
         };
 
         double zmienna,min,max;
-        int krok;
+        int krok, minus;
         string fun;
         List<string>L = new List<string>();
         public Stack<string> S = new Stack<string>();
@@ -33,6 +33,16 @@ namespace projekt
             Regex rg = new Regex(@"\.");
             this.fun = rg.Replace(this.fun,",");
 
+            if(this.fun[0]=='-' && this.fun[1]!='(') //pierwszy minus
+            {
+                this.fun = "0"+this.fun;
+            }
+            else if(this.fun[0]=='-' && this.fun[1]=='(')// pierwszy minus i cała funkcja w nawiasie
+            {
+                this.minus = 1;
+                this.fun = this.fun.Remove(0,1);
+            }
+
         }
 
         public string[] Tokeny()
@@ -41,15 +51,65 @@ namespace projekt
             MatchCollection tokeny = regex.Matches(this.fun);
             string[] tabTokeny = new string[tokeny.Count];
             int i = 0;
+
+            
+
             foreach(Match tok in tokeny)
             {
                 tabTokeny[i] = tok.Value;
-                Console.Write("{0} ",tabTokeny[i]);
                 i++;
             }
-            Console.Write("\n");
+            
 
             return tabTokeny;
+        }
+
+        public void Walidacja()
+        {
+            int nawias = 0;
+            string[] token= new string[this.Tokeny().Length];
+            token = this.Tokeny();
+            
+            
+
+            for(int i = 0; i < token.Length; i++)
+            {
+                if(D.ContainsKey(token[i]))
+                {
+                    if(D.ContainsKey(token[i+1]) && (D[token[i]]==1 || D[token[i]]==2 || D[token[i]]==3) && (D[token[i+1]]==1 || D[token[i+1]]==2 || D[token[i+1]]==3))
+                    {
+                        Console.WriteLine("niepoprawnie wprowadzone operatory matematyczne");
+                        Environment.Exit(0);
+                    }
+                    else if(D[token[i]]==4 && token[i+1]!="(")
+                    {
+                        Console.WriteLine("źle urzyta funkcja matematyczna");
+                        Environment.Exit(0);
+                    }
+                    
+                }
+
+                if(token[i]=="(") 
+                {
+                   nawias++;
+                }
+                else if(token[i]==")") 
+                {
+                    nawias--;
+                }
+                
+            }
+
+            if(nawias!=0){
+                Console.WriteLine("niepoprawna ilość nawiasów");
+                Environment.Exit(0);
+            }
+
+            foreach(string t in token)
+            {
+                Console.Write("{0} ",t);
+            }
+            Console.Write("\n");
         }
 
         public void Postfix()
@@ -57,7 +117,8 @@ namespace projekt
             double tok;
             foreach(string token in this.Tokeny())
             {
-                if(token=="(")S.Push(token);
+                if(token=="(")
+                    S.Push(token);
                 else if(token==")")
                 {
                     while(S.Peek()!="(")Q.Enqueue(S.Pop());
@@ -115,14 +176,23 @@ namespace projekt
                         if(token=="+") a += b;
                         else if(token=="-") a = b-a;
                         else if(token=="*") a *= b;
-                        else if(token=="/") a = b/a;
+                        else if(token=="/")
+                        {
+                            if(a==0)
+                            {
+                                Console.WriteLine("Nie dzielimy przez 0");
+                                Environment.Exit(0);
+                            }
+                            else a = b/a;
+                        } 
                         else if(token=="^") a = Math.Pow(b,a);
                     }
                     So.Push(a);
                 }
             }
             
-           return So.Pop();
+            if(this.minus == 1) return So.Pop()*(-1);
+            else return So.Pop();
             
         }
 

@@ -24,6 +24,7 @@ namespace projekt
             n = int.Parse(args[4]);
 
             RPN uchwyt = new RPN(funkcja,x,xMin,xMax,n);
+            uchwyt.Walidacja();
             uchwyt.Postfix();
             Console.WriteLine(uchwyt.ObliczX());
             uchwyt.ObliczWieleX();
